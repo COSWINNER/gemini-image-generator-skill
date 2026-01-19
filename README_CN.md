@@ -71,17 +71,40 @@
 ### 1. 安装依赖
 
 ```bash
-pip install -q -U google-genai Pillow
+pip install -q -U google-genai Pillow python-dotenv
 ```
 
 ### 2. 配置环境变量
+
+**方式一：使用 .env 文件（推荐）**
+
+复制示例文件并配置：
+
+```bash
+cp .env.example .env
+```
+
+编辑 `.env` 文件填入你的配置：
+
+```bash
+GEMINI_API_KEY=your-api-key-here
+# GEMINI_BASE_URL=https://your-proxy-url.com
+# GEMINI_MODEL=gemini-3-pro-image-preview
+```
+
+**方式二：使用系统环境变量**
 
 ```bash
 export GEMINI_API_KEY="your-api-key-here"
 
 # 可选：自定义 API 端点
 export GEMINI_BASE_URL="https://your-proxy-url.com"
+
+# 可选：自定义模型
+export GEMINI_MODEL="gemini-3-pro-image-preview"
 ```
+
+> **注意**：配置优先级为 `.env > 系统环境变量 > 默认值`
 
 ### 3. 安装 Skill
 
@@ -186,6 +209,7 @@ gemini-image-generator/
 ├── SKILL.md                    # Skill 定义文件（Claude 读取）
 ├── README.md                   # 英文文档
 ├── README_CN.md                # 中文文档（本文件）
+├── .env.example                # 环境变量模板
 ├── scripts/
 │   └── generate_image.py       # 图片生成脚本
 └── references/

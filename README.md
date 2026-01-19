@@ -71,17 +71,40 @@ A Claude Code Skill based on Gemini 3 Pro Image API, supporting text-to-image an
 ### 1. Install Dependencies
 
 ```bash
-pip install -q -U google-genai Pillow
+pip install -q -U google-genai Pillow python-dotenv
 ```
 
 ### 2. Configure Environment Variables
+
+**Method 1: Using .env file (Recommended)**
+
+Copy the example file and configure:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your values:
+
+```bash
+GEMINI_API_KEY=your-api-key-here
+# GEMINI_BASE_URL=https://your-proxy-url.com
+# GEMINI_MODEL=gemini-3-pro-image-preview
+```
+
+**Method 2: Using system environment variables**
 
 ```bash
 export GEMINI_API_KEY="your-api-key-here"
 
 # Optional: Custom API endpoint
 export GEMINI_BASE_URL="https://your-proxy-url.com"
+
+# Optional: Custom model
+export GEMINI_MODEL="gemini-3-pro-image-preview"
 ```
+
+> **Note**: Configuration priority is `.env > system environment variables > default values`
 
 ### 3. Install the Skill
 
@@ -185,6 +208,7 @@ gemini-image-generator/
 ├── SKILL.md                    # Skill definition file (read by Claude)
 ├── README.md                   # English documentation (this file)
 ├── README_CN.md                # Chinese documentation
+├── .env.example                # Environment variables template
 ├── scripts/
 │   └── generate_image.py       # Image generation script
 └── references/

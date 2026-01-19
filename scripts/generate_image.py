@@ -5,9 +5,10 @@ Gemini 3 Pro Image Generation Script
 This script generates images using Gemini 3 Pro Image API.
 Supports both text-to-image and image-to-image generation.
 
-Environment Variables:
+Configuration (priority: .env > system environment variables > defaults):
     GEMINI_API_KEY: Your Gemini API key (required)
     GEMINI_BASE_URL: Custom base URL for API endpoint (optional)
+    GEMINI_MODEL: Model name for image generation (default: gemini-3-pro-image-preview)
 
 Usage:
     python generate_image.py --prompt-json '<json_string>' [--input-images <path1> <path2> ...]
@@ -37,11 +38,39 @@ except ImportError:
     print("Please install with: pip install Pillow")
     sys.exit(1)
 
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    print("Error: python-dotenv package not installed.")
+    print("Please install with: pip install python-dotenv")
+    sys.exit(1)
+
+
+def get_env_value(key: str, default: Optional[str] = None) -> Optional[str]:
+    """
+    Get environment value with priority: .env > system env > default.
+
+    Args:
+        key: Environment variable name
+        default: Default value if not found
+
+    Returns:
+        The value from the highest priority source
+    """
+    # Load .env file (overrides system env if set)
+    env_path = Path(__file__).parent.parent / ".env"
+    load_dotenv(env_path, override=True)
+
+    # Check .env first (already loaded to os.environ)
+    value = os.environ.get(key)
+
+    return value if value is not None else default
+
 
 def get_client() -> genai.Client:
     """Initialize Gemini client with environment configuration."""
-    api_key = os.environ.get("GEMINI_API_KEY")
-    base_url = os.environ.get("GEMINI_BASE_URL")
+    api_key = get_env_value("GEMINI_API_KEY")
+    base_url = get_env_value("GEMINI_BASE_URL")
 
     if not api_key:
         print("Error: GEMINI_API_KEY environment variable is not set.")
@@ -331,11 +360,14 @@ def generate_image(
         image_config=types.ImageConfig(**image_config_kwargs) if image_config_kwargs else None
     )
 
+    # Get model from config (priority: .env > system env > default)
+    model = get_env_value("GEMINI_MODEL", "gemini-3-pro-image-preview")
+
     # Generate image
-    print("Generating image with Gemini 3 Pro Image...")
+    print(f"Generating image with {model}...")
     try:
         response = client.models.generate_content(
-            model="gemini-3-pro-image-preview",  # Using available image generation model
+            model=model,
             contents=contents,
             config=config
         )
