@@ -151,6 +151,13 @@ Execute the image generation script with the JSON prompt.
 
 **IMPORTANT**: Use the skill's path relative to project root: `.claude/skills/gemini-image-generator/scripts/generate_image.py`
 
+**🚨 CRITICAL - After Image Generation**:
+- ✅ Report the output file path to the user
+- ✅ Inform the user that image generation is complete
+- ❌ DO NOT automatically read or display the generated image
+- ❌ DO NOT use the Read tool on the generated image file
+- ⚠️ Let the user decide if they want to view the generated image
+
 #### For Text-to-Image
 
 ```bash
