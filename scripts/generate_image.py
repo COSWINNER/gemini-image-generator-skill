@@ -12,7 +12,6 @@ Configuration (priority: .env > system environment variables > defaults):
 
 Usage:
     python generate_image.py --prompt-json '<json_string>' [--input-images <path1> <path2> ...]
-    python generate_image.py --prompt-file prompt.json [--input-images <path1> <path2> ...]
 """
 
 import os
@@ -357,7 +356,8 @@ def generate_image(
     # Build generation config
     config = types.GenerateContentConfig(
         response_modalities=["TEXT", "IMAGE"],
-        image_config=types.ImageConfig(**image_config_kwargs) if image_config_kwargs else None
+        image_config=types.ImageConfig(**image_config_kwargs) if image_config_kwargs else None,
+        tools=[{"google_search": {}}]
     )
 
     # Get model from config (priority: .env > system env > default)
@@ -437,16 +437,11 @@ def main():
         description="Generate images using Gemini 3 Pro Image API"
     )
 
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument(
+    parser.add_argument(
         "--prompt-json",
         type=str,
+        required=True,
         help="JSON string containing the structured prompt"
-    )
-    group.add_argument(
-        "--prompt-file",
-        type=str,
-        help="Path to JSON file containing the structured prompt"
     )
 
     parser.add_argument(
@@ -466,19 +461,11 @@ def main():
     args = parser.parse_args()
 
     # Load prompt JSON
-    if args.prompt_json:
-        try:
-            prompt_json = json.loads(args.prompt_json)
-        except json.JSONDecodeError as e:
-            print(f"Error parsing JSON prompt: {e}")
-            sys.exit(1)
-    else:
-        try:
-            with open(args.prompt_file, "r", encoding="utf-8") as f:
-                prompt_json = json.load(f)
-        except Exception as e:
-            print(f"Error reading prompt file: {e}")
-            sys.exit(1)
+    try:
+        prompt_json = json.loads(args.prompt_json)
+    except json.JSONDecodeError as e:
+        print(f"Error parsing JSON prompt: {e}")
+        sys.exit(1)
 
     # Initialize client
     client = get_client()

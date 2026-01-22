@@ -1,6 +1,6 @@
 ---
 name: gemini-image-generator
-description: "This skill generates images using Gemini 3 Pro Image API. It supports both text-to-image and image-to-image generation including image editing, style transfer, and image merging. This skill should be used when users want to create, modify, or transform images using AI. The workflow involves three steps: first, Claude analyzes user intent and clarifies unclear requirements through conversation; second, Claude converts intent to structured JSON prompt format; third, Claude calls the generate_image.py script to generate images and save results to the generation-image directory."
+description: "This skill generates images using Gemini 3 Pro Image API with real-time web search capabilities via Google Search integration. It supports both text-to-image and image-to-image generation including image editing, style transfer, and image merging. The search functionality ensures generated content can incorporate current information and accurate references. This skill should be used when users want to create, modify, or transform images using AI. The workflow involves three steps: first, Claude analyzes user intent and clarifies unclear requirements through conversation; second, Claude converts intent to structured JSON prompt format; third, Claude calls the generate_image.py script to generate images and save results to the generation-image directory."
 ---
 
 # Gemini Image Generator Skill
@@ -16,13 +16,14 @@ Generate high-quality images using Gemini 3 Pro Image API with structured JSON p
   - Style transfer
   - Clothing transfer
   - Image editing and enhancement
+- **Real-time Search**: Integrated Google Search for real-time web queries, ensuring generated content is based on up-to-date information and accurate references
 
 ## Prerequisites
 
 Ensure the following dependencies are installed:
 
 ```bash
-pip install -q -U google-genai Pillow
+pip install -q -U google-genai Pillow python-dotenv
 ```
 
 Environment variables must be set:
@@ -139,12 +140,6 @@ Execute the image generation script with the JSON prompt.
 
 ```bash
 python .claude/skills/gemini-image-generator/scripts/generate_image.py --prompt-json '{"user_intent":"..."}'
-```
-
-Or save JSON to a file first:
-
-```bash
-python .claude/skills/gemini-image-generator/scripts/generate_image.py --prompt-file prompt.json
 ```
 
 #### For Image-to-Image
@@ -271,7 +266,7 @@ python .claude/skills/gemini-image-generator/scripts/generate_image.py --prompt-
 ### scripts/
 
 - `generate_image.py`: Main image generation script using Gemini API
-  - Accepts JSON prompt via `--prompt-json` or `--prompt-file`
+  - Accepts JSON prompt via `--prompt-json`
   - Supports input images via `--input-images`
   - Saves output to `--output-dir` (default: `./generation-image/`)
 
