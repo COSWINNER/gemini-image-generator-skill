@@ -61,14 +61,29 @@ Gemini 3 Pro Image supports the following aspect ratios and resolutions:
 When a user requests image generation, Claude should analyze and clarify their intent:
 
 1. **Identify the generation type**:
-   - Text-to-image: User describes a new image to create
-   - Image-to-image: User wants to modify, transform, or combine existing images
+   - **Text-to-image (Pure Creation)**: User describes a new image without any reference images
+   - **Image-to-image (Reference-based)**: User provides reference image(s) for ANY of these scenarios:
+     * Style transfer (e.g., "make it look like this style")
+     * Structure/composition reference (e.g., "similar layout/arrangement")
+     * Content reference (e.g., "based on this example")
+     * Face/identity preservation
+     * Pose copying
+     * Object/scene transformation
 
-2. **Determine aspect ratio and resolution**:
+2. **🚨 CRITICAL: Reference Image Detection**:
+   - **IF user mentions ANY existing image** (e.g., "像这张图", "参考这个", "based on this", "similar to this image", "用这张图的风格"):
+     * ✅ This is Image-to-image generation
+     * ✅ You MUST include the reference image in `input_image` field
+     * ✅ You MUST pass the image path via `--input-images` parameter
+     * ❌ DO NOT just read the image and describe it in text
+     * ❌ DO NOT convert visual elements into text prompts
+   - **Only if user describes a brand new image from imagination**: Use text-to-image
+
+3. **Determine aspect ratio and resolution**:
    - **For text-to-image**: If user does NOT explicitly specify aspect ratio or resolution, Claude MUST ask the user which aspect ratio and resolution they prefer (refer to the supported options table above)
    - **For image-to-image**: Automatically select the closest matching aspect ratio based on the source image dimensions. For multiple input images, use the primary/main image as reference. If user explicitly specifies a different aspect ratio, use the user's preference instead.
 
-3. **Clarify unclear aspects** by asking the user about:
+4. **Clarify unclear aspects** by asking the user about:
    - **Subject details**: Who or what is the main subject?
    - **Scene/setting**: Where does this take place?
    - **Style/aesthetic**: Realistic? Artistic? Specific style (cyberpunk, anime, etc.)?
@@ -76,10 +91,10 @@ When a user requests image generation, Claude should analyze and clarify their i
    - **Technical aspects**: Any specific camera look or film style?
    - **Special requirements**: Text in image? Specific poses? Multiple subjects?
 
-4. **For image-to-image**, additionally clarify:
+5. **For image-to-image**, additionally clarify:
    - Which input images to use?
    - What kind of transformation? (face swap, style transfer, pose copy, etc.)
-   - How much to preserve from the original? (strength parameter)
+   - How much to preserve from the original? (strength parameter: 0.5-0.95, higher = more similar)
 
 ### Step 2: Convert Intent to JSON Format (Claude's Responsibility)
 
