@@ -2,12 +2,18 @@
 
 [English](./README.md) | 简体中文
 
-一个基于 Gemini 3 Pro Image API 的 Claude Code Skill，支持文生图和图生图功能。
+一个基于 Gemini 3 Pro Image API 的 Claude Code Skill，支持文生图和图生图功能，涵盖多个创意领域。
 
 ## 功能特性
 
 ### 核心能力
 
+**多领域支持**
+- **摄影**：人像、风景、场景，支持虚拟相机设置和灯光控制
+- **平面设计**：海报、Logo、名片、社交媒体图片、横幅
+- **UI 设计**：移动应用界面、仪表板、落地页、设置面板
+
+**生成模式**
 - **文生图 (Text-to-Image)**：通过自然语言描述生成高质量图片
 - **图生图 (Image-to-Image)**：基于现有图片进行修改、转换或合并
   - 人脸身份保持
@@ -18,38 +24,39 @@
 
 ### 独特优势
 
+- **多领域 Schema**：针对摄影、平面设计、UI 设计定制的结构化 JSON prompt
 - **超高分辨率**：支持 1K/2K/4K 三档分辨率，最高可达 6336×2688 像素
 - **多种宽高比**：支持 10 种宽高比，覆盖各类使用场景
 - **智能交互**：Claude 自动分析需求，引导用户完善细节
-- **结构化 Prompt**：通过 JSON 格式精确控制生成效果
 - **灵活部署**：支持自定义 API 端点，可配合代理使用
 
 ### 使用场景
 
-**设计工作**
+**摄影创作**
+- 专业人像和头像
+- 风景和场景摄影
+- 带棚拍灯光的产品摄影
+- 特定相机设定的艺术场景
+
+**平面设计**
 - 网站 LOGO 设计
-- Banner 横幅图
-- 海报和宣传画
-- 社交媒体配图
-- 产品展示图
+- 活动海报和传单
+- 名片和品牌物料
+- 社交媒体图片和横幅
+- 信息图表设计
+
+**UI/UX 设计**
+- 移动应用界面原型
+- 数据可视化仪表板
+- 落地页设计
+- 设置和配置面板
+- 组件库设计
 
 **内容创作**
 - 文章配图
 - 封面图片
 - 头像和个人形象
 - 概念艺术图
-
-**商业应用**
-- 广告素材
-- 电商产品图
-- 品牌视觉设计
-- PPT 配图
-
-**个人娱乐**
-- 桌面壁纸
-- 手机壁纸
-- AI 艺术创作
-- 照片风格转换
 
 ## 支持的宽高比和分辨率
 
@@ -165,30 +172,93 @@ Claude 会自动：
 
 ## JSON Prompt 结构
 
-完整的 JSON prompt 结构参考 `references/json_schema_reference.md`，主要字段包括：
+完整的 JSON prompt 结构参考 `references/json_schema_reference.md`。Schema 支持三种创意领域：
+
+### 摄影模式（默认）
 
 ```json
 {
-  "user_intent": "自然语言描述目标",
+  "user_intent": "赛博朋克武士站在霓虹灯照亮的巷子里",
   "meta": {
+    "domain": "photography",
     "aspect_ratio": "16:9",
-    "image_size": "1K",
     "quality": "ultra_photorealistic"
   },
   "subject": [{
-    "type": "person",
-    "description": "视觉特征描述",
-    "pose": "动作描述",
-    "expression": "表情"
+    "type": "cyborg",
+    "description": "带有赛博义眼植入物的年轻黑客"
   }],
   "scene": {
-    "location": "场景描述",
-    "time": "golden_hour",
-    "lighting": {"type": "cinematic"}
+    "location": "赛博朋克巷子",
+    "lighting": {"type": "neon_lights", "direction": "rim_light"}
   },
   "style_modifiers": {
-    "medium": "photography",
-    "aesthetic": ["cyberpunk"]
+    "aesthetic": ["cyberpunk", "noir"]
+  }
+}
+```
+
+### 平面设计
+
+```json
+{
+  "user_intent": "夏日促销海报，50% 折扣优惠",
+  "meta": {
+    "domain": "graphic_design",
+    "aspect_ratio": "3:4",
+    "quality": "ultra_photorealistic"
+  },
+  "graphic_design": {
+    "design_type": "poster",
+    "layout": {
+      "grid_system": "hierarchical",
+      "alignment": "center_aligned",
+      "spacing": "generous_whitespace"
+    },
+    "color_scheme": {
+      "palette_type": "vibrant",
+      "primary_color": "tropical orange",
+      "secondary_color": "sky blue"
+    },
+    "elements": [
+      {"type": "headline", "content": "夏日促销", "placement": "top_center"},
+      {"type": "headline", "content": "5折优惠", "placement": "center"},
+      {"type": "cta_button", "content": "立即购买", "placement": "bottom_center"}
+    ],
+    "visual_style": {
+      "mood": "energetic",
+      "texture": "smooth"
+    }
+  }
+}
+```
+
+### UI 设计
+
+```json
+{
+  "user_intent": "现代深色模式数据分析仪表板",
+  "meta": {
+    "domain": "ui_design",
+    "aspect_ratio": "16:9"
+  },
+  "ui_design": {
+    "component_type": "dashboard",
+    "layout": {"structure": "grid", "columns": 3, "spacing": "comfortable"},
+    "components": [
+      {"type": "card", "variant": "primary"},
+      {"type": "chart", "variant": "primary"},
+      {"type": "sidebar", "variant": "secondary"}
+    ],
+    "color_system": {
+      "mode": "dark_mode",
+      "primary": "#6366f1",
+      "background": "#0f172a"
+    },
+    "styling": {
+      "border_radius": "medium_rounded",
+      "shadow": "subtle_elevation"
+    }
   }
 }
 ```

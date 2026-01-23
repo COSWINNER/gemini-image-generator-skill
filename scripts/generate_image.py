@@ -100,19 +100,61 @@ def load_input_images(image_paths: list[str]) -> list:
 def build_prompt_text(prompt_json: dict) -> str:
     """
     Convert structured JSON prompt to natural language prompt.
-    This function interprets the JSON schema and creates a descriptive prompt.
+    Supports three domains: photography, graphic_design, ui_design
     """
     parts = []
 
-    # User intent (if provided)
+    # User intent
     if "user_intent" in prompt_json:
         parts.append(prompt_json["user_intent"])
 
-    # Meta settings description
-    if "meta" in prompt_json:
-        meta = prompt_json["meta"]
-        if "quality" in meta:
-            parts.append(f"Style: {meta['quality'].replace('_', ' ')}")
+    # Get domain, default to photography
+    meta = prompt_json.get("meta", {})
+    domain = meta.get("domain", "photography")
+
+    # Quality (shared by all domains)
+    if "quality" in meta:
+        parts.append(f"Style: {meta['quality'].replace('_', ' ')}")
+
+    # Domain-specific rendering
+    if domain == "graphic_design":
+        parts.extend(_build_graphic_design_prompt(prompt_json))
+    elif domain == "ui_design":
+        parts.extend(_build_ui_design_prompt(prompt_json))
+    else:  # photography (default)
+        parts.extend(_build_photography_prompt(prompt_json))
+
+    # Style modifiers (shared by all domains)
+    if "style_modifiers" in prompt_json:
+        style_parts = _build_style_modifiers(prompt_json["style_modifiers"])
+        if style_parts:
+            parts.append(style_parts)
+
+    # Negative prompt
+    negative_items = []
+    if "advanced" in prompt_json and "negative_prompt" in prompt_json["advanced"]:
+        negative_items.extend(prompt_json["advanced"]["negative_prompt"])
+
+    # Domain-specific automatic negative prompts
+    if domain == "ui_design":
+        # For UI design, exclude device frames, monitors, screens to get pure UI
+        ui_excludes = ["monitor", "computer screen", "device frame", "laptop", "phone frame", "tablet frame", "display bezel", "physical device", "realistic device rendering", "photograph of screen"]
+        negative_items.extend(ui_excludes)
+    elif domain == "graphic_design":
+        # For graphic design, exclude photorealistic elements if using illustration quality
+        if meta.get("quality") in ["vector_illustration", "flat_illustration"]:
+            gd_excludes = ["photorealistic", "realistic lighting", "camera effects", "depth of field", "bokeh"]
+            negative_items.extend(gd_excludes)
+
+    if negative_items:
+        parts.append(f"Avoid: {', '.join(negative_items)}")
+
+    return "\n".join(parts)
+
+
+def _build_photography_prompt(prompt_json: dict) -> list[str]:
+    """Build prompt for photography domain."""
+    parts = []
 
     # Subject descriptions
     if "subject" in prompt_json:
@@ -275,31 +317,227 @@ def build_prompt_text(prompt_json: dict) -> str:
         if text_desc:
             parts.append("Text: " + " ".join(text_desc))
 
-    # Style modifiers
-    if "style_modifiers" in prompt_json:
-        style = prompt_json["style_modifiers"]
+    return parts
+
+
+def _build_graphic_design_prompt(prompt_json: dict) -> list[str]:
+    """Build prompt for graphic design domain."""
+    parts = []
+
+    if "graphic_design" not in prompt_json:
+        return parts
+
+    gd = prompt_json["graphic_design"]
+
+    # Design type
+    if "design_type" in gd:
+        parts.append(f"Design: {gd['design_type'].replace('_', ' ')}")
+
+    # Layout
+    if "layout" in gd:
+        layout = gd["layout"]
+        layout_desc = []
+        if "grid_system" in layout:
+            layout_desc.append(layout["grid_system"].replace("_", " "))
+        if "alignment" in layout:
+            layout_desc.append(layout["alignment"].replace("_", " "))
+        if "spacing" in layout:
+            layout_desc.append(layout["spacing"].replace("_", " "))
+        if "balance" in layout:
+            layout_desc.append(layout["balance"].replace("_", " "))
+        if layout_desc:
+            parts.append(f"Layout: {', '.join(layout_desc)}")
+
+    # Hierarchy
+    if "hierarchy" in gd:
+        hierarchy = gd["hierarchy"]
+        hierarchy_desc = []
+        if "primary_focus" in hierarchy:
+            hierarchy_desc.append(f"focus on {hierarchy['primary_focus'].replace('_', ' ')}")
+        if "visual_flow" in hierarchy:
+            hierarchy_desc.append(f"{hierarchy['visual_flow'].replace('_', ' ')} flow")
+        if hierarchy_desc:
+            parts.append(f"Hierarchy: {', '.join(hierarchy_desc)}")
+
+    # Color scheme
+    if "color_scheme" in gd:
+        colors = gd["color_scheme"]
+        color_desc = []
+        if "palette_type" in colors:
+            color_desc.append(colors["palette_type"].replace("_", " "))
+        if "primary_color" in colors:
+            color_desc.append(f"primary {colors['primary_color'].replace('_', ' ')}")
+        if "secondary_color" in colors:
+            color_desc.append(f"secondary {colors['secondary_color'].replace('_', ' ')}")
+        if "accent_color" in colors:
+            color_desc.append(f"accent {colors['accent_color'].replace('_', ' ')}")
+        if color_desc:
+            parts.append(f"Colors: {', '.join(color_desc)}")
+
+    # Typography
+    if "typography" in gd:
+        typo = gd["typography"]
+        typo_desc = []
+        if "headline_font" in typo:
+            typo_desc.append(f"headline: {typo['headline_font'].replace('_', ' ')}")
+        if "body_font" in typo:
+            typo_desc.append(f"body: {typo['body_font'].replace('_', ' ')}")
+        if typo_desc:
+            parts.append(f"Typography: {', '.join(typo_desc)}")
+
+    # Elements
+    if "elements" in gd:
+        elements_desc = []
+        for elem in gd["elements"]:
+            elem_desc = f"{elem['type'].replace('_', ' ')}"
+            if "content" in elem:
+                elem_desc += f" '{elem['content']}'"
+            if "style" in elem:
+                elem_desc += f" ({elem['style'].replace('_', ' ')})"
+            if "placement" in elem:
+                elem_desc += f" [{elem['placement'].replace('_', ' ')}]"
+            elements_desc.append(elem_desc)
+        if elements_desc:
+            parts.append(f"Elements: {', '.join(elements_desc)}")
+
+    # Visual style
+    if "visual_style" in gd:
+        style = gd["visual_style"]
         style_desc = []
-
-        if "medium" in style:
-            style_desc.append(style["medium"].replace("_", " "))
-
-        if "aesthetic" in style:
-            aesthetics = [a.replace("_", " ") for a in style["aesthetic"]]
-            style_desc.append(", ".join(aesthetics))
-
-        if "artist_reference" in style:
-            style_desc.append(f"in the style of {', '.join(style['artist_reference'])}")
-
+        if "mood" in style:
+            style_desc.append(style["mood"])
+        if "texture" in style:
+            style_desc.append(style["texture"].replace("_", " "))
+        if "effects" in style and style["effects"] != "none":
+            style_desc.append(style["effects"].replace("_", " "))
         if style_desc:
-            parts.append("Style: " + ", ".join(style_desc))
+            parts.append(f"Style: {', '.join(style_desc)}")
 
-    # Negative prompt (for context, though Gemini handles this differently)
-    if "advanced" in prompt_json and "negative_prompt" in prompt_json["advanced"]:
-        neg = prompt_json["advanced"]["negative_prompt"]
-        if neg:
-            parts.append(f"Avoid: {', '.join(neg)}")
+    return parts
 
-    return "\n".join(parts)
+
+def _build_ui_design_prompt(prompt_json: dict) -> list[str]:
+    """Build prompt for UI design domain."""
+    parts = []
+
+    if "ui_design" not in prompt_json:
+        return parts
+
+    ui = prompt_json["ui_design"]
+
+    # Component type
+    if "component_type" in ui:
+        parts.append(f"UI Component: {ui['component_type'].replace('_', ' ')}")
+
+    # Layout
+    if "layout" in ui:
+        layout = ui["layout"]
+        layout_desc = []
+        if "structure" in layout:
+            layout_desc.append(layout["structure"].replace("_", " "))
+        if "columns" in layout:
+            layout_desc.append(f"{layout['columns']} columns")
+        if "spacing" in layout:
+            layout_desc.append(layout["spacing"].replace("_", " "))
+        if layout_desc:
+            parts.append(f"Layout: {', '.join(layout_desc)}")
+
+    # Components
+    if "components" in ui:
+        comp_desc = []
+        for comp in ui["components"]:
+            c = f"{comp['type'].replace('_', ' ')}"
+            if "variant" in comp:
+                c += f" ({comp['variant']})"
+            if "state" in comp and comp["state"] != "default":
+                c += f" [{comp['state']}]"
+            if "size" in comp:
+                c += f" size: {comp['size']}"
+            if "style" in comp:
+                c += f" style: {comp['style'].replace('_', ' ')}"
+            comp_desc.append(c)
+        if comp_desc:
+            parts.append(f"Components: {', '.join(comp_desc)}")
+
+    # Color system
+    if "color_system" in ui:
+        colors = ui["color_system"]
+        color_desc = []
+        if "mode" in colors:
+            color_desc.append(colors["mode"].replace("_", " "))
+        if "primary" in colors:
+            color_desc.append(f"primary {colors['primary']}")
+        if color_desc:
+            parts.append(f"Colors: {', '.join(color_desc)}")
+
+    # Typography system
+    if "typography_system" in ui:
+        typo = ui["typography_system"]
+        typo_desc = []
+        if "scale" in typo:
+            typo_desc.append(typo["scale"].replace("_", " "))
+        if "font_family" in typo:
+            typo_desc.append(typo["font_family"].replace("_", " "))
+        if typo_desc:
+            parts.append(f"Typography: {', '.join(typo_desc)}")
+
+    # Interaction states
+    if "interaction_states" in ui:
+        states = ui["interaction_states"]
+        states_desc = []
+        if "hover_effect" in states and states["hover_effect"] != "none":
+            states_desc.append(f"hover: {states['hover_effect'].replace('_', ' ')}")
+        if "focus_style" in states and states["focus_style"] != "none":
+            states_desc.append(f"focus: {states['focus_style'].replace('_', ' ')}")
+        if states_desc:
+            parts.append(f"Interactions: {', '.join(states_desc)}")
+
+    # Styling
+    if "styling" in ui:
+        styling = ui["styling"]
+        style_desc = []
+        if "border_radius" in styling:
+            style_desc.append(f"radius: {styling['border_radius'].replace('_', ' ')}")
+        if "shadow" in styling and styling["shadow"] != "none":
+            style_desc.append(styling["shadow"].replace("_", " "))
+        if style_desc:
+            parts.append(f"Styling: {', '.join(style_desc)}")
+
+    # Iconography
+    if "iconography" in ui:
+        icons = ui["iconography"]
+        icon_desc = []
+        if "style" in icons:
+            icon_desc.append(icons["style"])
+        if "size" in icons:
+            icon_desc.append(f"{icons['size']} size")
+        if icon_desc:
+            parts.append(f"Icons: {', '.join(icon_desc)}")
+
+    # Design system reference
+    if "design_system" in ui:
+        parts.append(f"Design System: {ui['design_system'].replace('_', ' ')}")
+
+    return parts
+
+
+def _build_style_modifiers(style_modifiers: dict) -> str:
+    """Build style modifiers string (shared by all domains)."""
+    style_desc = []
+
+    if "medium" in style_modifiers:
+        style_desc.append(style_modifiers["medium"].replace("_", " "))
+
+    if "aesthetic" in style_modifiers:
+        aesthetics = [a.replace("_", " ") for a in style_modifiers["aesthetic"]]
+        style_desc.append(", ".join(aesthetics))
+
+    if "artist_reference" in style_modifiers:
+        style_desc.append(f"in the style of {', '.join(style_modifiers['artist_reference'])}")
+
+    if style_desc:
+        return "Style: " + ", ".join(style_desc)
+    return ""
 
 
 def generate_image(
@@ -349,9 +587,8 @@ def generate_image(
     if "aspect_ratio" in meta:
         image_config_kwargs["aspect_ratio"] = meta["aspect_ratio"]
 
-    # Image size (resolution): 1K, 2K, or 4K
-    if "image_size" in meta:
-        image_config_kwargs["image_size"] = meta["image_size"]
+    # Image size (resolution): 1K, 2K, or 4K (default: 2K)
+    image_config_kwargs["image_size"] = meta.get("image_size", "2K")
 
     # Build generation config
     config = types.GenerateContentConfig(

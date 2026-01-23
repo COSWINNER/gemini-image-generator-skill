@@ -2,12 +2,18 @@
 
 English | [简体中文](./README_CN.md)
 
-A Claude Code Skill based on Gemini 3 Pro Image API, supporting text-to-image and image-to-image generation.
+A Claude Code Skill based on Gemini 3 Pro Image API, supporting text-to-image and image-to-image generation across multiple creative domains.
 
 ## Features
 
 ### Core Capabilities
 
+**Multi-Domain Support**
+- **Photography**: Portraits, landscapes, scenes with virtual camera settings and lighting control
+- **Graphic Design**: Posters, logos, business cards, social media graphics, banners
+- **UI Design**: Mobile app screens, dashboards, landing pages, settings panels
+
+**Generation Modes**
 - **Text-to-Image**: Generate high-quality images from natural language descriptions
 - **Image-to-Image**: Modify, transform, or combine existing images
   - Face identity preservation
@@ -18,38 +24,39 @@ A Claude Code Skill based on Gemini 3 Pro Image API, supporting text-to-image an
 
 ### Unique Advantages
 
+- **Multi-Domain Schema**: Structured JSON prompts tailored for photography, graphic design, and UI design
 - **Ultra-High Resolution**: Supports 1K/2K/4K resolution tiers, up to 6336×2688 pixels
 - **Multiple Aspect Ratios**: 10 aspect ratio options covering various use cases
 - **Smart Interaction**: Claude automatically analyzes requirements and guides users through details
-- **Structured Prompts**: Precise control over generation through JSON format
 - **Flexible Deployment**: Supports custom API endpoints for proxy usage
 
 ### Use Cases
 
-**Design Work**
+**Photography**
+- Professional portraits and headshots
+- Landscape and scenery photography
+- Product photography with studio lighting
+- Artistic scenes with specific camera settings
+
+**Graphic Design**
 - Website logo design
-- Banner images
-- Posters and promotional materials
-- Social media graphics
-- Product showcase images
+- Event posters and flyers
+- Business cards and branding materials
+- Social media graphics and banners
+- Infographic design
+
+**UI/UX Design**
+- Mobile app screen mockups
+- Dashboard and data visualization interfaces
+- Landing page designs
+- Settings and configuration panels
+- Component library design
 
 **Content Creation**
 - Article illustrations
 - Cover images
 - Avatars and personal branding
 - Concept art
-
-**Business Applications**
-- Advertising materials
-- E-commerce product images
-- Brand visual design
-- Presentation graphics
-
-**Personal Entertainment**
-- Desktop wallpapers
-- Mobile wallpapers
-- AI art creation
-- Photo style conversion
 
 ## Supported Aspect Ratios and Resolutions
 
@@ -164,30 +171,93 @@ Generated images are saved by default in the `./generation-image/` directory wit
 
 ## JSON Prompt Structure
 
-For the complete JSON prompt structure, refer to `references/json_schema_reference.md`. Main fields include:
+For the complete JSON prompt structure, refer to `references/json_schema_reference.md`. The schema supports three creative domains:
+
+### Photography (Default)
 
 ```json
 {
-  "user_intent": "Natural language description of the goal",
+  "user_intent": "A cyberpunk warrior standing in a neon-lit alley",
   "meta": {
+    "domain": "photography",
     "aspect_ratio": "16:9",
-    "image_size": "1K",
     "quality": "ultra_photorealistic"
   },
   "subject": [{
-    "type": "person",
-    "description": "Visual feature description",
-    "pose": "Action description",
-    "expression": "Expression"
+    "type": "cyborg",
+    "description": "young hacker with cybernetic eye implant"
   }],
   "scene": {
-    "location": "Scene description",
-    "time": "golden_hour",
-    "lighting": {"type": "cinematic"}
+    "location": "cyberpunk alley",
+    "lighting": {"type": "neon_lights", "direction": "rim_light"}
   },
   "style_modifiers": {
-    "medium": "photography",
-    "aesthetic": ["cyberpunk"]
+    "aesthetic": ["cyberpunk", "noir"]
+  }
+}
+```
+
+### Graphic Design
+
+```json
+{
+  "user_intent": "Summer sale poster with 50% off promotion",
+  "meta": {
+    "domain": "graphic_design",
+    "aspect_ratio": "3:4",
+    "quality": "ultra_photorealistic"
+  },
+  "graphic_design": {
+    "design_type": "poster",
+    "layout": {
+      "grid_system": "hierarchical",
+      "alignment": "center_aligned",
+      "spacing": "generous_whitespace"
+    },
+    "color_scheme": {
+      "palette_type": "vibrant",
+      "primary_color": "tropical orange",
+      "secondary_color": "sky blue"
+    },
+    "elements": [
+      {"type": "headline", "content": "SUMMER SALE", "placement": "top_center"},
+      {"type": "headline", "content": "50% OFF", "placement": "center"},
+      {"type": "cta_button", "content": "SHOP NOW", "placement": "bottom_center"}
+    ],
+    "visual_style": {
+      "mood": "energetic",
+      "texture": "smooth"
+    }
+  }
+}
+```
+
+### UI Design
+
+```json
+{
+  "user_intent": "Modern dark mode analytics dashboard",
+  "meta": {
+    "domain": "ui_design",
+    "aspect_ratio": "16:9"
+  },
+  "ui_design": {
+    "component_type": "dashboard",
+    "layout": {"structure": "grid", "columns": 3, "spacing": "comfortable"},
+    "components": [
+      {"type": "card", "variant": "primary"},
+      {"type": "chart", "variant": "primary"},
+      {"type": "sidebar", "variant": "secondary"}
+    ],
+    "color_system": {
+      "mode": "dark_mode",
+      "primary": "#6366f1",
+      "background": "#0f172a"
+    },
+    "styling": {
+      "border_radius": "medium_rounded",
+      "shadow": "subtle_elevation"
+    }
   }
 }
 ```

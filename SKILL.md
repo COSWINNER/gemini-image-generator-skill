@@ -10,6 +10,9 @@ Generate high-quality images using Gemini 3 Pro Image API with structured JSON p
 ## Capabilities
 
 - **Text-to-Image**: Generate images from natural language descriptions
+  - Photography: Portraits, landscapes, scenes with virtual camera settings
+  - Graphic Design: Posters, logos, business cards, social media images, banners
+  - UI Design: Mobile app screens, dashboards, landing pages, settings panels
 - **Image-to-Image**: Modify, transform, or combine existing images
   - Face identity preservation
   - Pose transfer
@@ -60,7 +63,11 @@ Gemini 3 Pro Image supports the following aspect ratios and resolutions:
 
 When a user requests image generation, Claude should analyze and clarify their intent:
 
-1. **Identify the generation type**:
+1. **Identify the generation domain and type**:
+   - **Domain** (determines which schema sections to use):
+     * `photography` - Portraits, scenes, landscapes with camera settings (default)
+     * `graphic_design` - Posters, logos, business cards, social media graphics
+     * `ui_design` - App screens, dashboards, web interfaces, UI components
    - **Text-to-image (Pure Creation)**: User describes a new image without any reference images
    - **Image-to-image (Reference-based)**: User provides reference image(s) for ANY of these scenarios:
      * Style transfer (e.g., "make it look like this style")
@@ -106,6 +113,7 @@ Claude converts the clarified user intent to a structured JSON prompt. Reference
 {
   "user_intent": "Natural language summary of the goal",
   "meta": {
+    "domain": "photography",
     "aspect_ratio": "16:9",
     "image_size": "1K",
     "quality": "ultra_photorealistic"
@@ -134,6 +142,34 @@ Claude converts the clarified user intent to a structured JSON prompt. Reference
   "style_modifiers": {
     "medium": "photography",
     "aesthetic": ["cyberpunk"]
+  }
+}
+```
+
+**For graphic design**, use `domain: "graphic_design"` and include `graphic_design` section:
+
+```json
+{
+  "meta": {"domain": "graphic_design", "aspect_ratio": "3:4"},
+  "graphic_design": {
+    "design_type": "poster",
+    "layout": {"grid_system": "hierarchical", "alignment": "center_aligned"},
+    "color_scheme": {"palette_type": "vibrant", "primary_color": "tropical orange"},
+    "elements": [...]
+  }
+}
+```
+
+**For UI design**, use `domain: "ui_design"` and include `ui_design` section:
+
+```json
+{
+  "meta": {"domain": "ui_design", "aspect_ratio": "16:9"},
+  "ui_design": {
+    "component_type": "dashboard",
+    "layout": {"structure": "grid", "columns": 3},
+    "color_system": {"mode": "dark_mode", "primary": "#6366f1"},
+    "components": [...]
   }
 }
 ```
