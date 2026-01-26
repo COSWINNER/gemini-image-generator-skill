@@ -16,11 +16,9 @@
 **生成模式**
 - **文生图 (Text-to-Image)**：通过自然语言描述生成高质量图片
 - **图生图 (Image-to-Image)**：基于现有图片进行修改、转换或合并
-  - 人脸身份保持
-  - 姿势迁移
-  - 风格迁移
-  - 服装迁移
-  - 图片编辑和增强
+  - 全图转换：人脸身份保持、姿势迁移、风格迁移、服装迁移
+  - **精修模式 (partial_edit)**：局部精确修改，多条修改指令
+  - **混合模式**：参考图 + 局部修改同时进行
 
 ### 独特优势
 
@@ -172,7 +170,11 @@ Claude 会自动：
 
 ## JSON Prompt 结构
 
-完整的 JSON prompt 结构参考 `references/json_schema_reference.md`。Schema 支持三种创意领域：
+完整的 JSON prompt 结构参考 `references/` 目录下的文档：
+- `json_schema_t2i_reference.md` - 文生图完整参考
+- `json_schema_i2i_reference.md` - 图生图完整参考（含精修模式）
+
+Schema 支持三种创意领域：
 
 ### 摄影模式（默认）
 
@@ -263,6 +265,51 @@ Claude 会自动：
 }
 ```
 
+### 精修模式 (Precision Edit)
+
+局部精确修改，多条修改指令同时执行：
+
+```json
+{
+  "user_intent": "把模特衣服改成红色，表情改成微笑",
+  "meta": {"aspect_ratio": "3:4"},
+  "input_image": {
+    "path": "./portrait.jpg",
+    "usage_type": "partial_edit",
+    "strength": 0.92
+  },
+  "edits": {
+    "clothing": {
+      "edits": [{"target": "color", "action": "change_to", "value": "red"}]
+    },
+    "face": {
+      "edits": [{"target": "expression", "action": "change_to", "value": "smiling"}]
+    }
+  }
+}
+```
+
+### 混合模式 (Hybrid Mode)
+
+参考图 + 局部修改同时进行：
+
+```json
+{
+  "user_intent": "姿势参考图二，手中的包改为皮革材质",
+  "meta": {"aspect_ratio": "3:4"},
+  "base_image": {"path": "./main.jpg", "strength": 0.92},
+  "reference_images": [
+    {"path": "./pose.jpg", "usage_type": "pose_copy", "strength": 0.80}
+  ],
+  "lock": ["face"],
+  "edits": {
+    "accessories": {
+      "edits": [{"target": "material", "action": "change_to", "value": "leather"}]
+    }
+  }
+}
+```
+
 ## 常见问题
 
 | 问题 | 解决方案 |
@@ -276,14 +323,15 @@ Claude 会自动：
 
 ```
 gemini-image-generator/
-├── SKILL.md                    # Skill 定义文件（Claude 读取）
-├── README.md                   # 英文文档
-├── README_CN.md                # 中文文档（本文件）
-├── .env.example                # 环境变量模板
+├── SKILL.md                         # Skill 定义文件（Claude 读取）
+├── README.md                        # 英文文档
+├── README_CN.md                     # 中文文档（本文件）
+├── .env.example                     # 环境变量模板
 ├── scripts/
-│   └── generate_image.py       # 图片生成脚本
+│   └── generate_image.py            # 图片生成脚本
 └── references/
-    └── json_schema_reference.md # JSON prompt 完整参考
+    ├── json_schema_t2i_reference.md # 文生图 JSON prompt 完整参考
+    └── json_schema_i2i_reference.md # 图生图 JSON prompt 完整参考（含精修模式）
 ```
 
 ## License

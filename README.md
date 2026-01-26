@@ -16,11 +16,9 @@ A Claude Code Skill based on Gemini 3 Pro Image API, supporting text-to-image an
 **Generation Modes**
 - **Text-to-Image**: Generate high-quality images from natural language descriptions
 - **Image-to-Image**: Modify, transform, or combine existing images
-  - Face identity preservation
-  - Pose transfer
-  - Style transfer
-  - Clothing transfer
-  - Image editing and enhancement
+  - Full image transform: Face identity, pose transfer, style transfer, clothing transfer
+  - **Precision Edit Mode (partial_edit)**: Local precise modifications with multiple edit commands
+  - **Hybrid Mode**: Reference images + local edits combined
 
 ### Unique Advantages
 
@@ -171,7 +169,11 @@ Generated images are saved by default in the `./generation-image/` directory wit
 
 ## JSON Prompt Structure
 
-For the complete JSON prompt structure, refer to `references/json_schema_reference.md`. The schema supports three creative domains:
+For the complete JSON prompt structure, refer to the documents in `references/`:
+- `json_schema_t2i_reference.md` - Complete Text-to-Image reference
+- `json_schema_i2i_reference.md` - Complete Image-to-Image reference (includes Precision Edit Mode)
+
+The schema supports three creative domains:
 
 ### Photography (Default)
 
@@ -262,6 +264,51 @@ For the complete JSON prompt structure, refer to `references/json_schema_referen
 }
 ```
 
+### Precision Edit Mode
+
+Local precise modifications with multiple edit commands:
+
+```json
+{
+  "user_intent": "Change model's dress to red, make expression smiling",
+  "meta": {"aspect_ratio": "3:4"},
+  "input_image": {
+    "path": "./portrait.jpg",
+    "usage_type": "partial_edit",
+    "strength": 0.92
+  },
+  "edits": {
+    "clothing": {
+      "edits": [{"target": "color", "action": "change_to", "value": "red"}]
+    },
+    "face": {
+      "edits": [{"target": "expression", "action": "change_to", "value": "smiling"}]
+    }
+  }
+}
+```
+
+### Hybrid Mode
+
+Reference images + local edits combined:
+
+```json
+{
+  "user_intent": "Change pose to reference image, make bag leather material",
+  "meta": {"aspect_ratio": "3:4"},
+  "base_image": {"path": "./main.jpg", "strength": 0.92},
+  "reference_images": [
+    {"path": "./pose.jpg", "usage_type": "pose_copy", "strength": 0.80}
+  ],
+  "lock": ["face"],
+  "edits": {
+    "accessories": {
+      "edits": [{"target": "material", "action": "change_to", "value": "leather"}]
+    }
+  }
+}
+```
+
 ## FAQ
 
 | Issue | Solution |
@@ -275,14 +322,15 @@ For the complete JSON prompt structure, refer to `references/json_schema_referen
 
 ```
 gemini-image-generator/
-├── SKILL.md                    # Skill definition file (read by Claude)
-├── README.md                   # English documentation (this file)
-├── README_CN.md                # Chinese documentation
-├── .env.example                # Environment variables template
+├── SKILL.md                         # Skill definition file (read by Claude)
+├── README.md                        # English documentation (this file)
+├── README_CN.md                     # Chinese documentation
+├── .env.example                     # Environment variables template
 ├── scripts/
-│   └── generate_image.py       # Image generation script
+│   └── generate_image.py            # Image generation script
 └── references/
-    └── json_schema_reference.md # Complete JSON prompt reference
+    ├── json_schema_t2i_reference.md # Complete Text-to-Image JSON reference
+    └── json_schema_i2i_reference.md # Complete Image-to-Image JSON reference (includes Precision Edit Mode)
 ```
 
 ## License
