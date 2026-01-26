@@ -89,6 +89,7 @@ When a user requests image generation, Claude should analyze and clarify their i
 3. **Determine aspect ratio and resolution**:
    - **For text-to-image**: If user does NOT explicitly specify aspect ratio or resolution, Claude MUST ask the user which aspect ratio and resolution they prefer (refer to the supported options table above)
    - **For image-to-image**: Automatically select the closest matching aspect ratio based on the source image dimensions. For multiple input images, use the primary/main image as reference. If user explicitly specifies a different aspect ratio, use the user's preference instead.
+   - **🚨 CRITICAL: image_size selection**: If user does NOT explicitly specify `image_size`, Claude MUST ask the user to choose between `1K`, `2K`, or `4K` ONLY. No other options are allowed. DO NOT suggest or accept any other values.
 
 4. **Clarify unclear aspects** by asking the user about:
    - **Subject details**: Who or what is the main subject?
@@ -143,7 +144,7 @@ Claude converts the clarified user intent to a structured JSON prompt.
   "meta": {
     "domain": "photography",
     "aspect_ratio": "16:9",
-    "image_size": "1K",
+    "image_size": "2K",
     "quality": "ultra_photorealistic"
   },
   "subject": [{
@@ -253,7 +254,7 @@ Claude converts the clarified user intent to a structured JSON prompt.
 
 Execute the image generation script with the JSON prompt.
 
-**IMPORTANT**: Use the skill's path relative to project root: `.claude/skills/gemini-image-generator/scripts/generate_image.py`
+**IMPORTANT**: Use the skill's path relative to project root: `.claude/skills/gemini-image-generator-skill/scripts/generate_image.py`
 
 **🚨 CRITICAL - After Image Generation**:
 - ✅ Report the output file path to the user
@@ -265,19 +266,19 @@ Execute the image generation script with the JSON prompt.
 #### For Text-to-Image
 
 ```bash
-python .claude/skills/gemini-image-generator/scripts/generate_image.py --prompt-json '{"user_intent":"..."}'
+python .claude/skills/gemini-image-generator-skill/scripts/generate_image.py --prompt-json '{"user_intent":"..."}'
 ```
 
 #### For Image-to-Image
 
 ```bash
-python .claude/skills/gemini-image-generator/scripts/generate_image.py --prompt-json '{"user_intent":"..."}' --input-images ./input1.jpg ./input2.jpg
+python .claude/skills/gemini-image-generator-skill/scripts/generate_image.py --prompt-json '{"user_intent":"..."}' --input-images ./input1.jpg ./input2.jpg
 ```
 
 #### Custom Output Directory
 
 ```bash
-python .claude/skills/gemini-image-generator/scripts/generate_image.py --prompt-json '{"user_intent":"..."}' --output-dir ./my-images
+python .claude/skills/gemini-image-generator-skill/scripts/generate_image.py --prompt-json '{"user_intent":"..."}' --output-dir ./my-images
 ```
 
 #### Output Location
@@ -317,7 +318,7 @@ Generated images are saved to `./generation-image/` directory (or custom directo
 
 **Execute**:
 ```bash
-python .claude/skills/gemini-image-generator/scripts/generate_image.py --prompt-json '{"user_intent":"Professional headshot..."}'
+python .claude/skills/gemini-image-generator-skill/scripts/generate_image.py --prompt-json '{"user_intent":"Professional headshot..."}'
 ```
 
 ### Example 2: Image Style Transfer
@@ -348,7 +349,7 @@ python .claude/skills/gemini-image-generator/scripts/generate_image.py --prompt-
 
 **Execute**:
 ```bash
-python .claude/skills/gemini-image-generator/scripts/generate_image.py --prompt-json '...' --input-images ./user_photo.jpg
+python .claude/skills/gemini-image-generator-skill/scripts/generate_image.py --prompt-json '...' --input-images ./user_photo.jpg
 ```
 
 ### Example 3: Complex Scene with Multiple Elements
