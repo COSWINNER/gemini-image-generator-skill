@@ -103,9 +103,37 @@ When a user requests image generation, Claude should analyze and clarify their i
    - What kind of transformation? (face swap, style transfer, pose copy, etc.)
    - How much to preserve from the original? (strength parameter: 0.5-0.95, higher = more similar)
 
+6. **🚨 CRITICAL: Precision Edit Mode Detection**:
+   - **IF user requests LOCAL/MULTIPLE modifications** (e.g., "把衣服改成红色", "修改这个按钮", "换这个文字"):
+     * ✅ This is **Partial Edit Mode** (`usage_type: "partial_edit"`)
+     * ✅ Use `edits` field to list ALL modifications
+     * ✅ strength should be **0.85-0.98** (higher than normal I2I)
+     * ✅ What user doesn't mention stays unchanged (reverse thinking)
+   - **IF user combines reference images + local edits** (e.g., "姿势参考图二，衣服改成红色"):
+     * ✅ This is **Hybrid Mode** (use `base_image` + `reference_images` + `edits`)
+     * ✅ Use `lock` array for elements that must never change
+   - **Signal words for Precision Edit**: "把X改成Y", "只改...", "保持...不变", "修改这个..."
+
+### Precision Edit: Listing Modifications
+
+When in Precision Edit Mode, list ALL modifications explicitly:
+
+```
+修改项：
+1. 衣服颜色 → 红色
+2. 表情 → 微笑
+3. 背景 → 模糊
+```
+
+Each modification becomes an entry in the `edits` object.
+
 ### Step 2: Convert Intent to JSON Format (Claude's Responsibility)
 
-Claude converts the clarified user intent to a structured JSON prompt. Reference `references/json_schema_reference.md` for the complete schema.
+Claude converts the clarified user intent to a structured JSON prompt.
+
+**🚨 IMPORTANT: Use the correct reference document**
+- **For Text-to-Image (文生图)**: Reference `references/json_schema_t2i_reference.md`
+- **For Image-to-Image (图生图)**: Reference `references/json_schema_i2i_reference.md`
 
 **Key sections to include** (only include relevant fields):
 
@@ -170,6 +198,46 @@ Claude converts the clarified user intent to a structured JSON prompt. Reference
     "layout": {"structure": "grid", "columns": 3},
     "color_system": {"mode": "dark_mode", "primary": "#6366f1"},
     "components": [...]
+  }
+}
+```
+
+**For Precision Edit Mode (partial_edit)**, use `edits` field to list modifications:
+
+```json
+{
+  "user_intent": "把模特衣服改成红色，表情改成微笑",
+  "meta": {"aspect_ratio": "3:4"},
+  "input_image": {
+    "path": "./portrait.jpg",
+    "usage_type": "partial_edit",
+    "strength": 0.92
+  },
+  "edits": {
+    "clothing": {
+      "edits": [{"target": "color", "action": "change_to", "value": "red"}]
+    },
+    "face": {
+      "edits": [{"target": "expression", "action": "change_to", "value": "smiling"}]
+    }
+  }
+}
+```
+
+**For Hybrid Mode (reference + edits)**, use `base_image` + `reference_images`:
+
+```json
+{
+  "user_intent": "姿势参考图二，手中的包改为皮革材质",
+  "meta": {"aspect_ratio": "3:4"},
+  "base_image": {"path": "./main.jpg", "strength": 0.92},
+  "reference_images": [
+    {"path": "./pose.jpg", "usage_type": "pose_copy", "strength": 0.80}
+  ],
+  "edits": {
+    "accessories": {
+      "edits": [{"target": "material", "action": "change_to", "value": "leather"}]
+    }
   }
 }
 ```
@@ -330,7 +398,8 @@ python .claude/skills/gemini-image-generator/scripts/generate_image.py --prompt-
 
 ### references/
 
-- `json_schema_reference.md`: Complete documentation of the structured JSON prompt schema with all available fields
+- `json_schema_t2i_reference.md`: Text-to-Image (T2I) complete reference - for generating images from scratch
+- `json_schema_i2i_reference.md`: Image-to-Image (I2I) complete reference - for transforming existing images
 
 ## Troubleshooting
 
